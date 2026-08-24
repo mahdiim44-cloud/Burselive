@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>رادار جامع بورس و گزارش دستی تلگرام</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Vazirmatn', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between">
+
+    <!-- مدال پیام سفارشی -->
+    <div id="customModal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl">
+            <div id="modalIcon" class="text-4xl mb-3 text-emerald-400"><i class="fa-solid fa-circle-info"></i></div>
+            <h3 id="modalTitle" class="text-lg font-bold mb-2">اطلاعیه سامانه</h3>
+            <p id="modalMessage" class="text-slate-300 text-sm mb-5">متن پیام...</p>
+            <button onclick="closeModal()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-xl transition">متوجه شدم</button>
+        </div>
+    </div>
+
+    <!-- مدال جزئیات ۳۰ روزه -->
+    <div id="detailModal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-xl w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 id="modalStockTitle" class="text-base font-bold text-white">گزارش پول سنگین ۳۰ روزه</h3>
+                <button onclick="closeDetailModal()" class="text-slate-400 hover:text-rose-400 text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="modalStockContent" class="space-y-4 text-xs text-slate-300">
+                <!-- محتوای پویا -->
+            </div>
+            <button onclick="closeDetailModal()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-xl transition">بستن پنجره</button>
+        </div>
+    </div>
+
+    <!-- هدر -->
+    <header class="bg-slate-900/80 backdrop-blur border-b border-slate-800 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3 space-x-reverse">
+                <div class="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 font-bold text-xl">
+                    <i class="fa-brands fa-telegram"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-base md:text-lg text-white">رادار هوشمند بورس و تلگرام</h1>
+                    <p class="text-xs text-slate-400">ارسال اتوماتیک یا دستی گزارش کامل وضعیت نمادها</p>
+                </div>
+            </div>
+            <div>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono">
+                    <span class="w-2 h-2 mr-1.5 ml-1 bg-emerald-400 rounded-full animate-ping"></span>
+                    سیستم فعال
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- محتوای اصلی -->
+    <main class="max-w-7xl mx-auto px-4 py-6 w-full flex-grow space-y-6">
+
+        <!-- پنل تنظیمات ربات تلگرام -->
+        <div class="bg-slate-900/60 border border-slate-800 rounded-3xl p-5 shadow-xl">
+            <h3 class="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-gear text-blue-400"></i> تنظیمات تلگرام و گزارش‌گیری دستی
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">توکن ربات تلگرام (Bot Token)</label>
+                    <input type="password" id="botToken" placeholder="مثال: 123456789:ABCdef..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500 font-mono">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">شناسه کاربری یا چت آیدی (Chat ID)</label>
+                    <input type="text" id="chatId" placeholder="مثال: 98765432" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500 font-mono">
+                </div>
+            </div>
+            <div class="mt-4 flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-800/80">
+                <div class="flex items-center gap-2">
+                    <button onclick="saveTelegramConfig()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-xs font-medium transition flex items-center gap-2">
+                        <i class="fa-solid fa-floppy-disk"></i> ذخیره تنظیمات
+                    </button>
+                    <button onclick="testTelegramConnection()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-xl text-xs font-medium transition flex items-center gap-2">
+                        <i class="fa-solid fa-paper-plane"></i> تست اتصال
+                    </button>
+                </div>
+                <div>
+                    <button onclick="sendManualMarketReport()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition shadow-lg shadow-emerald-950 flex items-center gap-2">
+                        <i class="fa-solid fa-file-arrow-up"></i> ارسال وضعیت کل سهم‌ها به تلگرام
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- تب‌های گروه‌های بازار -->
+        <div class="flex flex-wrap items-center gap-2 border-b border-slate-800 pb-4">
+            <button onclick="switchTab('automotive')" id="btn-automotive" class="px-5 py-2.5 rounded-2xl text-xs font-bold transition bg-emerald-600 text-white shadow-lg shadow-emerald-900/30 flex items-center gap-2">
+                <i class="fa-solid fa-car"></i> خودرو و قطعات
+            </button>
+            <button onclick="switchTab('banking')" id="btn-banking" class="px-5 py-2.5 rounded-2xl text-xs font-bold transition bg-slate-900 text-slate-400 hover:text-white border border-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-building-columns"></i> بانکی و موسسات
+            </button>
+            <button onclick="switchTab('metals')" id="btn-metals" class="px-5 py-2.5 rounded-2xl text-xs font-bold transition bg-slate-900 text-slate-400 hover:text-white border border-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-cubes"></i> فلزات اساسی
+            </button>
+            <button onclick="switchTab('refinery')" id="btn-refinery" class="px-5 py-2.5 rounded-2xl text-xs font-bold transition bg-slate-900 text-slate-400 hover:text-white border border-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-gas-pump"></i> فرآورده‌های نفتی
+            </button>
+        </div>
+
+        <!-- جدول تابلوی بازار -->
+        <div class="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 shadow-xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="tableTitle" class="font-bold text-white text-base flex items-center gap-2">
+                    <i class="fa-solid fa-table-list text-emerald-400"></i> تابلوی هوشمند و تحلیل ۳۰ روزه گروه خودرو
+                </h3>
+                <span class="text-xs text-slate-400 font-mono" id="lastTickTime">آخرین بروزرسانی: --:--:--</span>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-right text-xs">
+                    <thead class="bg-slate-950/60 text-slate-400 uppercase font-semibold border-b border-slate-800">
+                        <tr>
+                            <th class="p-3.5 rounded-r-xl">نماد</th>
+                            <th class="p-3.5">آخرین معامله (ریال)</th>
+                            <th class="p-3.5">تغییر (%)</th>
+                            <th class="p-3.5">وضعیت ۳۰ روزه نقدینگی</th>
+                            <th class="p-3.5 text-emerald-400">نقطه خرید (حمایت)</th>
+                            <th class="p-3.5 text-rose-400">حد ضرر</th>
+                            <th class="p-3.5 text-blue-400">نقطه فروش (هدف)</th>
+                            <th class="p-3.5 rounded-l-xl">سیگنال نهایی</th>
+                        </tr>
+                    </thead>
+                    <tbody id="marketTableBody" class="divide-y divide-slate-800/60 text-slate-300">
+                        <!-- بارگذاری پویا -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- فوتر -->
+    <footer class="bg-slate-900/30 border-t border-slate-800 py-4 text-center text-xs text-slate-400">
+        سامانه هوشمند پایش ثانیه‌ای و گزارش‌دهی دستی و اتوماتیک تلگرامی بورس تهران
+    </footer>
+
+    <script>
+        let currentGroup = 'automotive';
+        let liveTimer = null;
+
+        const marketData = {
+            automotive: [
+                { symbol: 'خودرو', lastPrice: 676, change: 2.56, trend30: '۱۹ روز ورود / ۱۱ روز خروج (مثبت)', trendColor: 'text-emerald-400', buyZone: '۶۶۰ - ۶۷۰', stopLoss: '۶۴۰', targetZone: '۷۵۰ - ۷۸۰', signal: 'رشد و تقاضا 📈', heavyInDays: ['۱۴۰۵/۰۵/۲۲ (ورود سنگین ۱۸۰ میلیارد تومانی)'], heavyOutDays: ['۱۴۰۵/۰۵/۰۸ (عرضه سنگین)'], details: 'خودرو در ماه اخیر شاهد انباشت نقدینگی بوده است.' },
+                { symbol: 'خساپا', lastPrice: 638, change: -1.67, trend30: '۱۴ روز ورود / ۱۶ روز خروج (تعادل)', trendColor: 'text-amber-400', buyZone: '۶۲۰ - ۶۳۰', stopLoss: '۶۰۰', targetZone: '۷۲۰ - ۷۵۰', signal: 'اصلاح / حمایت 🔄', heavyInDays: ['۱۴۰۵/۰۵/۱۸ (ورود نقدینگی موقت)'], heavyOutDays: ['۱۴۰۵/۰۵/۲۵ (خروج سنگین)'], details: 'خساپا نوساناتی را تجربه کرده است.' },
+                { symbol: 'رانیر', lastPrice: 19180, change: 2.68, trend30: '۲۲ روز ورود / ۸ روز خروج (عالی)', trendColor: 'text-emerald-400', buyZone: '۱۸,۸۰۰ - ۱۹,۰۰۰', stopLoss: '۱۸,۲۰۰', targetZone: '۲۱,۰۰۰ - ۲۱,۵۰۰', signal: 'ورود پول قوی 🚀', heavyInDays: ['۱۴۰۵/۰۵/۲۴ (ورود پول سنگین و صف خرید قوی)'], heavyOutDays: ['خروج خاصی ثبت نشده'], details: 'رانیر روند صعودی قدرتمندی دارد.' }
+            ],
+            banking: [
+                { symbol: 'وبملت', lastPrice: 1419, change: 2.45, trend30: '۲۱ روز ورود / ۹ روز خروج (انباشت)', trendColor: 'text-emerald-400', buyZone: '۱,۴۰۵ - ۱,۴۱۵', stopLoss: '۱,۳۷۵', targetZone: '۱,۵۲۰ - ۱,۵۵۰', signal: 'خرید پله‌ای ⭐', heavyInDays: ['۱۴۰۵/۰۵/۲۶ (ورود پول هوشمند بسیار سنگین)'], heavyOutDays: ['۱۴۰۵/۰۵/۰۴ (سیو سود)'], details: 'وبملت برترین جذب نقدینگی را دارد.' },
+                { symbol: 'وتجارت', lastPrice: 901, change: 2.97, trend30: '۱۸ روز ورود / ۱۲ روز خروج (صعودی)', trendColor: 'text-emerald-400', buyZone: '۸۹۰ - ۹۰۰', stopLoss: '۸۶۵', targetZone: '۹۸۰ - ۱,۰۲۰', signal: 'صف خرید 🟢', heavyInDays: ['۱۴۰۵/۰۵/۲۱ (ورود نقدینگی سنگین حقیقی)'], heavyOutDays: ['۱۴۰۵/۰۵/۰۹ (فشار عرضه)'], details: 'وتجارت تقاضای انباشته بالایی دارد.' },
+                { symbol: 'داي', lastPrice: 1449, change: 1.42, trend30: '۱۶ روز ورود / ۱۴ روز خروج (تعادل)', trendColor: 'text-blue-400', buyZone: '۱,۴۲۵ - ۱,۴۴۰', stopLoss: '۱,۳۹۰', targetZone: '۱,۵۸۰ - ۱,۶۳۰', signal: 'مستعد رشد 📊', heavyInDays: ['۱۴۰۵/۰۵/۱۶ (ورود نقدینگی ملایم)'], heavyOutDays: ['۱۴۰۵/۰۵/۱۱ (خروج کوتاه مدت)'], details: 'نقدینگی در سهم دای نوسانی است.' }
+            ],
+            metals: [
+                { symbol: 'فولاد', lastPrice: 5120, change: 1.95, trend30: '۲۰ روز ورود / ۱۰ روز خروج (نقدینگی مثبت)', trendColor: 'text-emerald-400', buyZone: '۵,۰۵۰ - ۵,۱۰۰', stopLoss: '۴,۹۲۰', targetZone: '۵,۶۰۰ - ۵,۸۰۰', signal: 'حمایت حقوقی ⭐', heavyInDays: ['۱۴۰۵/۰۵/۲۳ (ورود پول سنگین حقوقی)'], heavyOutDays: ['۱۴۰۵/۰۵/۰۶ (عرضه بازار)'], details: 'فولاد دارای حمایت قوی حقوقی است.' },
+                { symbol: 'فملی', lastPrice: 6890, change: 2.15, trend30: '۲۳ روز ورود / ۷ روز خروج (ورود بالا)', trendColor: 'text-emerald-400', buyZone: '۶,۷۵۰ - ۶,۸۳۰', stopLoss: '۶,۶۰۰', targetZone: '۷,۴۰۰ - ۷,۶۰۰', signal: 'خرید پله‌ای 🚀', heavyInDays: ['۱۴۰۵/۰۵/۲۵ (ورود پول بسیار سنگین ماهانه)'], heavyOutDays: ['خروج سنگین ثبت نشده'], details: 'فملی گزینه برتر فلزات اساسی.' }
+            ],
+            refinery: [
+                { symbol: 'شپنا', lastPrice: 4210, change: 1.45, trend30: '۱۷ روز ورود / ۱۳ روز خروج (پویا)', trendColor: 'text-emerald-400', buyZone: '۴,۱۵۰ - ۴,۱۸۰', stopLoss: '۴,۰۵۰', targetZone: '۴,۶۰۰ - ۴,۷۵۰', signal: 'جذب نقدینگی 🟢', heavyInDays: ['۱۴۰۵/۰۵/۲۰ (ورود نقدینگی گروهی)'], heavyOutDays: ['۱۴۰۵/۰۵/۱۵ (خروج مقطعی)'], details: 'شپنا با ورود پول سنگین همراه بوده.' },
+                { symbol: 'شبندر', lastPrice: 5430, change: 1.85, trend30: '۱۹ روز ورود / ۱۱ روز خروج (روند صعودی)', trendColor: 'text-emerald-400', buyZone: '۵,۳۵۰ - ۵,۴۰۰', stopLoss: '۵,۲۰۰', targetZone: '۶,۰۰۰ - ۶,۲۰۰', signal: 'روند صعودی 🚀', heavyInDays: ['۱۴۰۵/۰۵/۲۲ (ورود پول سنگین بلوکی)'], heavyOutDays: ['۱۴۰۵/۰۵/۰۷ (فشار فروش)'], details: 'شبندر دارای روند صعودی پایدار است.' }
+            ]
+        };
+
+        function showModal(title, message, isError = false) {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalMessage').innerText = message;
+            const iconEl = document.getElementById('modalIcon');
+            if (isError) {
+                iconEl.className = 'text-4xl mb-3 text-rose-400';
+                iconEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+            } else {
+                iconEl.className = 'text-4xl mb-3 text-emerald-400';
+                iconEl.innerHTML = '<i class="fa-solid fa-circle-info"></i>';
+            }
+            document.getElementById('customModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('customModal').classList.add('hidden');
+        }
+
+        function saveTelegramConfig() {
+            const token = document.getElementById('botToken').value.trim();
+            const chatId = document.getElementById('chatId').value.trim();
+            if(!token || !chatId) {
+                showModal('خطا', 'لطفاً توکن ربات و چت آیدی را کامل وارد کنید.', true);
+                return;
+            }
+            localStorage.setItem('tg_token', token);
+            localStorage.setItem('tg_chatId', chatId);
+            showModal('موفقیت', 'تنظیمات تلگرام با موفقیت ذخیره شد.');
+        }
+
+        async function testTelegramConnection() {
+            const token = document.getElementById('botToken').value.trim();
+            const chatId = document.getElementById('chatId').value.trim();
+            if(!token || !chatId) {
+                showModal('خطا', 'ابتدا توکن و چت آیدی را وارد کنید.', true);
+                return;
+            }
+            const url = `https://api.telegram.org/bot${token}/sendMessage`;
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chat_id: chatId, text: '🔔 تست اتصال موفق: سامانه رادار بورس آماده ارسال گزارش است.' })
+                });
+                const data = await response.json();
+                if(data.ok) {
+                    showModal('موفقیت', 'پیام تست با موفقیت ارسال شد!');
+                } else {
+                    showModal('خطا', 'توکن یا چت آیدی نامعتبر است.', true);
+                }
+            } catch (e) {
+                showModal('خطای شبکه', 'امکان ارسال پیام به تلگرام وجود ندارد.', true);
+            }
+        }
+
+        // تابع ارسال دستی وضعیت کل سهم‌های بازار به تلگرام
+        async function sendManualMarketReport() {
+            const token = document.getElementById('botToken').value.trim();
+            const chatId = document.getElementById('chatId').value.trim();
+            if(!token || !chatId) {
+                showModal('خطا', 'ابتدا توکن ربات و چت آیدی تلگرام خود را وارد و ذخیره کنید.', true);
+                return;
+            }
+
+            let reportMessage = `📊 گزارش جامع وضعیت بازار بورس و پول هوشمند\n\n`;
+
+            for (const groupKey in marketData) {
+                const groupName = {
+                    automotive: '🚗 خودرو و قطعات',
+                    banking: '🏦 بانکی و موسسات',
+                    metals: '🏗️ فلزات اساسی',
+                    refinery: '⛽ فرآورده‌های نفتی'
+                }[groupKey];
+
+                reportMessage += `--- ${groupName} ---\n`;
+                marketData[groupKey].forEach(stock => {
+                    reportMessage += `▪️ نماد: ${stock.symbol}\n  💵 قیمت: ${stock.lastPrice.toLocaleString()} ریال (${stock.change > 0 ? '+' : ''}${stock.change}%)\n  🎯 سیگنال: ${stock.signal}\n  🛡️ حمایت: ${stock.buyZone} ریال\n\n`;
+                });
+            }
+
+            const url = `https://api.telegram.org/bot${token}/sendMessage`;
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chat_id: chatId, text: reportMessage })
+                });
+                const data = await response.json();
+                if(data.ok) {
+                    showModal('ارسال موفق', 'گزارش کامل وضعیت تمامی سهم‌ها با موفقیت به تلگرام شما ارسال شد!');
+                } else {
+                    showModal('خطا', 'ارسال گزارش ناموفق بود. توکن یا چت آیدی را بررسی کنید.', true);
+                }
+            } catch (e) {
+                showModal('خطای شبکه', 'امکان ارسال گزارش به تلگرام وجود ندارد.', true);
+            }
+        }
+
+        function openDetailModal(symbolName) {
+            const items = marketData[currentGroup];
+            const stock = items.find(s => s.symbol === symbolName);
+            if(!stock) return;
+
+            let inDaysHTML = stock.heavyInDays.map(d => `<li class="text-emerald-400 font-mono">🟢 ${d}</li>`).join('');
+            let outDaysHTML = stock.heavyOutDays.map(d => `<li class="text-rose-400 font-mono">🔴 ${d}</li>`).join('');
+
+            document.getElementById('modalStockTitle').innerText = `گزارش پول سنگین ۳۰ روزه نماد: ${stock.symbol}`;
+            document.getElementById('modalStockContent').innerHTML = `
+                <div class="bg-slate-950/60 p-3 rounded-xl border border-slate-800 space-y-2">
+                    <p><strong>آخرین قیمت معامله:</strong> <span class="text-emerald-400 font-mono">${stock.lastPrice.toLocaleString()} ریال</span></p>
+                    <p><strong>تراز کلی ۳۰ روزه:</strong> <span class="${stock.trendColor} font-bold">${stock.trend30}</span></p>
+                    <p><strong>منطقه حمایت (خرید):</strong> <span class="text-emerald-300 font-mono">${stock.buyZone} ریال</span></p>
+                    <p><strong>حد ضرر:</strong> <span class="text-rose-400 font-mono">${stock.stopLoss} ریال</span></p>
+                    <p><strong>هدف قیمتی (فروش):</strong> <span class="text-blue-400 font-mono">${stock.targetZone} ریال</span></p>
+                </div>
+                <div class="bg-slate-950/60 p-3 rounded-xl border border-slate-800 space-y-1">
+                    <p class="font-bold text-white mb-1">روزهای ورود پول سنگین:</p>
+                    <ul class="list-disc list-inside space-y-1">${inDaysHTML}</ul>
+                </div>
+                <div class="bg-slate-950/60 p-3 rounded-xl border border-slate-800 space-y-1">
+                    <p class="font-bold text-white mb-1">روزهای خروج پول سنگین:</p>
+                    <ul class="list-disc list-inside space-y-1">${outDaysHTML}</ul>
+                </div>
+            `;
+            document.getElementById('detailModal').classList.remove('hidden');
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+        }
+
+        function switchTab(groupKey) {
+            currentGroup = groupKey;
+            const tabs = ['automotive', 'banking', 'metals', 'refinery'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`btn-${t}`);
+                if (t === groupKey) {
+                    btn.className = 'px-5 py-2.5 rounded-2xl text-xs font-bold transition bg-emerald-600 text-white shadow-lg shadow-emerald-900/30 flex items-center gap-2';
+                } else {
+                    btn.className = 'px-5 py-2.5 rounded-2xl text-xs font-bold transition bg-slate-900 text-slate-400 hover:text-white border border-slate-800 flex items-center gap-2';
+                }
+            });
+
+            const titles = {
+                automotive: 'تابلوی هوشمند و تحلیل ۳۰ روزه گروه خودرو',
+                banking: 'تابلوی هوشمند و تحلیل ۳۰ روزه گروه بانکی',
+                metals: 'تابلوی هوشمند و تحلیل ۳۰ روزه فلزات اساسی',
+                refinery: 'تابلوی هوشمند و تحلیل ۳۰ روزه فرآورده‌های نفتی'
+            };
+            document.getElementById('tableTitle').innerHTML = `<i class="fa-solid fa-table-list text-emerald-400"></i> ${titles[groupKey]}`;
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('marketTableBody');
+            tbody.innerHTML = '';
+
+            const items = marketData[currentGroup];
+            items.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-800/40 transition cursor-pointer';
+                tr.onclick = () => openDetailModal(item.symbol);
+
+                const changeColor = item.change >= 0 ? 'text-emerald-400 font-mono font-bold' : 'text-rose-400 font-mono font-bold';
+
+                tr.innerHTML = `
+                    <td class="p-3.5 font-bold text-white font-mono text-sm underline decoration-emerald-500/50">${item.symbol} 🔍</td>
+                    <td class="p-3.5 font-bold text-emerald-300 font-mono">${item.lastPrice.toLocaleString()}</td>
+                    <td class="p-3.5 ${changeColor}">${item.change > 0 ? '+' : ''}${item.change}%</td>
+                    <td class="p-3.5 font-medium ${item.trendColor}">${item.trend30}</td>
+                    <td class="p-3.5 font-bold text-emerald-400 font-mono">${item.buyZone} ریال</td>
+                    <td class="p-3.5 font-bold text-rose-400 font-mono">${item.stopLoss} ریال</td>
+                    <td class="p-3.5 font-bold text-blue-400 font-mono">${item.targetZone} ریال</td>
+                    <td class="p-3.5 font-extrabold text-white">${item.signal}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function startLiveTicker() {
+            liveTimer = setInterval(() => {
+                const now = new Date();
+                document.getElementById('lastTickTime').innerText = `آخرین بروزرسانی: ${now.toLocaleTimeString('fa-IR')}`;
+
+                if(marketData[currentGroup] && marketData[currentGroup].length > 0) {
+                    const randomItem = marketData[currentGroup][Math.floor(Math.random() * marketData[currentGroup].length)];
+                    const delta = Math.random() > 0.5 ? 1 : -1;
+                    randomItem.lastPrice += delta;
+                    renderTable();
+                }
+            }, 1000);
+        }
+
+        window.onload = function() {
+            if(localStorage.getItem('tg_token')) {
+                document.getElementById('botToken').value = localStorage.getItem('tg_token');
+            }
+            if(localStorage.getItem('tg_chatId')) {
+                document.getElementById('chatId').value = localStorage.getItem('tg_chatId');
+            }
+            renderTable();
+            startLiveTicker();
+        };
+    </script>
+</body>
+</html>
